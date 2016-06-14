@@ -26,12 +26,13 @@ getCallbackVarName = (var_name)->
 
   # if it matches an express callback, return "express"
   if express_regex.test var_name
-    return 'express'
+    return 'express variable'
 
   regex = ///
-    (^(cb|cbb|callback|cb2)$)              # var name exact matches
+      (^(cb|cbb|callback|cb2)$)             # var name exact matches
     | (^(cb|callback)_)                    # var name that start with "cb_"
     | (_(cb|callback)$)                    # var name that end with "_cb"
+    | (^express\svariable$)
   ///i
 
   # if it looks like a cb variable, return the var name
@@ -242,18 +243,24 @@ class ForkLinter
     return false
 
   visitDef: (node, func_name, might_not_be_func = true)=>
-    if not func_name
-      throw new Error "no func_name passed to visitDef()"
-#    func_name = variableObjToStr node.variable
 
-    @current_branch.addFuncDef func_name, node, might_not_be_func
+    converted_func_name = getCallbackVarName(func_name) or func_name
+
+    if not converted_func_name
+      throw new Error "no converted_func_name passed to visitDef()"
+#    converted_func_name = variableObjToStr node.variable
+
+    @current_branch.addFuncDef converted_func_name, node, might_not_be_func
     return
     
   visitCall: (node)=>
     # FIXME: handle do
 
     func_name = variableObjToStr node.variable
-    @current_branch.addFuncCall func_name, node
+
+    converted_func_name = getCallbackVarName(func_name) or func_name
+
+    @current_branch.addFuncCall converted_func_name, node
 
     node.eachChild @visit
 

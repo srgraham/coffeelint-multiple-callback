@@ -13,11 +13,11 @@ app.use '/test-multiple-res-okay', (req,res,next)->
   res.render 'path/to/template.ejs', options
   return
 
-app.use '/test-res-not-sent-error', (req,res,next)->
+app.use '/test-res-not-sent-error', (req,res,next)-> # HIT
   return
 
 app.use '/test-next-and-res-error', (req,res,next)->
   res.send(123)
-  next()
+  next() # HIT
   return
 
