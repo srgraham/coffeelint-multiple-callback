@@ -1,13 +1,13 @@
 
+some_require = require('./thing')()
+
+caller = ()-> # HIT
+  return
 
 caller2 = (cb)-> # HIT
   return
 
 caller2()
-
-caller = ()-> # HIT
-  return
-
   
 # var defs to prevent undefined errors
 stuff = {}

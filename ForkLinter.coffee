@@ -62,7 +62,7 @@ variableObjToStr = (variable_obj)->
 isExempt = (func_name)->
   out = false
 
-  if /^exports\./.test func_name
+  if /^(module\.)?exports\./.test func_name
     out = true
 
   return out
@@ -256,7 +256,14 @@ class ForkLinter
   visitCall: (node)=>
     # FIXME: handle do
 
-    func_name = variableObjToStr node.variable
+    variable = node.variable
+    switch getNodeType variable
+      # if a call calls a call, it needs to be handled special
+      when 'Call'
+        @visitCall variable
+        return
+
+    func_name = variableObjToStr variable
 
     converted_func_name = getCallbackVarName(func_name) or func_name
 
