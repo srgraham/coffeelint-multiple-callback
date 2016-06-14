@@ -71,31 +71,31 @@ describe 'lint the things', ->
 
   it 'basic', =>
     getErrors('basic')
-    console.log @rule.errors
+#    console.log @rule.errors
     checkFixtureForHits('basic')
     return
 
   it 'mocha', =>
     getErrors('mocha')
-    console.log @rule.errors
+#    console.log @rule.errors
     checkFixtureForHits('mocha')
     return
 
   it 'express', =>
     getErrors('express')
-    console.log @rule.errors
+#    console.log @rule.errors
     checkFixtureForHits('express')
     return
 
   it 'async', =>
     getErrors('async')
-    console.log @rule.errors
+#    console.log @rule.errors
     checkFixtureForHits('async')
     return
 
   it 'lodash', =>
     getErrors('lodash')
-    console.log @rule.errors
+#    console.log @rule.errors
     checkFixtureForHits('lodash')
     return
 
