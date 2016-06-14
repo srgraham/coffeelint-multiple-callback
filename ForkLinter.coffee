@@ -172,17 +172,18 @@ class ForkLinter
           out_calls[prefixed_func_name] = call_obj
           if fork_branch.isDeadBranch()
             out_calls[prefixed_func_name].max_hits_this_branch = 0
+            out_calls[prefixed_func_name].called_at_nodes = []
+            out_calls[prefixed_func_name].called_at_nodes_this_branch = []
 
           # then resume _.each loop
           return
-
-        out_calls[prefixed_func_name].def_node ?= call_obj.def_node
-        out_calls[prefixed_func_name].called_at_nodes_this_branch = out_calls[prefixed_func_name].called_at_nodes_this_branch.concat call_obj.called_at_nodes_this_branch
 
         out_calls[prefixed_func_name].triggered_errors.no_hits |= call_obj.no_hits
         out_calls[prefixed_func_name].triggered_errors.multiple_hits |= call_obj.multiple_hits
 
         if not fork_branch.isDeadBranch()
+          out_calls[prefixed_func_name].def_node ?= call_obj.def_node
+          out_calls[prefixed_func_name].called_at_nodes_this_branch = out_calls[prefixed_func_name].called_at_nodes_this_branch.concat call_obj.called_at_nodes_this_branch
           out_calls[prefixed_func_name].max_hits_this_branch = _.max [out_calls[prefixed_func_name].max_hits_this_branch, call_obj.max_hits_this_branch]
 
         out_calls[prefixed_func_name].min_hits_this_branch = _.min [out_calls[prefixed_func_name].min_hits_this_branch, call_obj.min_hits_this_branch]
@@ -402,7 +403,40 @@ class ForkLinter
       return
     return
 
-  # TODO: handle try/catch
+  visitTry: (node)=>
+    try_block = node.attempt
+    catch_block = node.recovery
+    finally_block = node.ensure
+
+    # possible routes
+    # (try -> catch) -> finally
+    # (try) -> finally
+
+    # we have two branches we're forking into: either both try and catch are hit, or only try
+    # we have to group in the try block on both because there's a chance it returns and we have to handle that properly
+    catch_branch_hit = @addBranch false, ()=>
+      try_block.eachChild @visit
+      if catch_block
+        catch_block.eachChild @visit
+      return
+
+    catch_branch_skipped = @addBranch false, ()=>
+      try_block.eachChild @visit
+      return
+
+    # FIXME: we might also need a branch to account for Try being hit, but not hitting an inner Return
+
+    # AFTER processing all the branches, merge the calls back in
+    catch_fork_branch = @mergeForkBranches catch_branch_hit, catch_branch_skipped
+    @current_branch.mergeChildCalls catch_fork_branch
+
+
+    # then hit finally
+    if finally_block
+      finally_block.eachChild @visit
+
+    @checkBranchForBadCalls @current_branch
+    return
 
   throwError: (node, err_msg, func_name, hits)=>
     if not node or not node.locationData

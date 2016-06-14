@@ -178,3 +178,35 @@ class B extends A
   constructor: () ->
     super 'B'
     return
+
+goodTry = (cb)->
+  a = 0
+
+  try
+    a = 1 # all of this
+
+  catch e
+    a = 2 # all of this
+    cb()
+    return
+
+  finally
+    a = 3 # all of this
+
+  a = 4
+  cb()
+  return
+  
+goodTry()
+
+badTry = (bad_cb)->
+  try
+    bad_cb()
+  catch e
+    stuff()
+    return
+
+  bad_cb() # HIT
+  return
+
+badTry()

@@ -110,15 +110,14 @@ class Branch
       out_calls[prefixed_func_name].triggered_errors.no_hits |= call_obj.no_hits
       out_calls[prefixed_func_name].triggered_errors.multiple_hits |= call_obj.multiple_hits
 
-      out_calls[prefixed_func_name].def_node ?= call_obj.def_node
-      out_calls[prefixed_func_name].called_at_nodes_this_branch = out_calls[prefixed_func_name].called_at_nodes_this_branch.concat call_obj.called_at_nodes_this_branch
-      out_calls[prefixed_func_name].called_at_nodes = out_calls[prefixed_func_name].called_at_nodes.concat call_obj.called_at_nodes_this_branch
-
 #      out_calls[prefixed_func_name].min_hits = call_obj.min_hits
 #      out_calls[prefixed_func_name].max_hits = call_obj.max_hits
 
       # if its a dead branch, we don't need max_hits added up the chain
       if not child_branch.isDeadBranch()
+        out_calls[prefixed_func_name].def_node ?= call_obj.def_node
+        out_calls[prefixed_func_name].called_at_nodes_this_branch = out_calls[prefixed_func_name].called_at_nodes_this_branch.concat call_obj.called_at_nodes_this_branch
+        out_calls[prefixed_func_name].called_at_nodes = out_calls[prefixed_func_name].called_at_nodes.concat call_obj.called_at_nodes_this_branch
 #        out_calls[prefixed_func_name].max_hits = _.max [out_calls[prefixed_func_name].max_hits, call_obj.max_hits]
         out_calls[prefixed_func_name].max_hits += call_obj.max_hits_this_branch
         out_calls[prefixed_func_name].max_hits_this_branch += call_obj.max_hits_this_branch
