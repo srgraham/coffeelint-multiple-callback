@@ -46,3 +46,12 @@ badAsync2 = (case_data, unhandled_callback)-> # HIT
   return
 
 badAsync2()
+
+#iterator = (item, cb)->
+#  cb()
+#  return
+#
+#collection = [1,2,3]
+#
+#async.each collection, iterator, (err)->
+#  return

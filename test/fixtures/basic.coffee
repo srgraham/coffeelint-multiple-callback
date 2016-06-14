@@ -137,3 +137,44 @@ badSwitch = (thing, cb)->
   return
 
 badSwitch()
+
+# TODO: this fails. put effort into fixing it....
+#factorial = (n) ->
+#  if n < 0
+#    return 0
+#
+#  if n is 0 or n is 1
+#    return 1
+#
+#  return n * factorial(n - 1)
+
+six = 6
+
+class A
+  one: 1
+  @two: 2
+  three = 3
+  @four = 4
+  five()
+  six
+  9
+
+  constructor: (bad_cb)-> # HIT
+    return
+
+  methodOne: (bad_cb2)-> # HIT
+    return 1
+
+  @methodTwo: (bad_cb3)-> # HIT
+    return 2
+
+  methodThree = (bad_cb4)-> # HIT
+    return 3
+
+  @methodFour = (bad_cb5)-> # HIT
+    return 4
+
+class B extends A
+  constructor: () ->
+    super 'B'
+    return

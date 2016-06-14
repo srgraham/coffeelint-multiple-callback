@@ -29,9 +29,9 @@ getCallbackVarName = (var_name)->
     return 'express variable'
 
   regex = ///
-      (^(cb|cbb|callback|cb2)$)             # var name exact matches
-    | (^(cb|callback)_)                    # var name that start with "cb_"
-    | (_(cb|callback)$)                    # var name that end with "_cb"
+      (^(cb|cbb|callback|cb)\d*$)      # var name exact matches
+    | (^(cb|callback)_)                # var name that start with "cb_"
+    | (_(cb|callback)\d*$)             # var name that end with "_cb"
     | (^express\svariable$)
   ///i
 
@@ -62,7 +62,12 @@ variableObjToStr = (variable_obj)->
 isExempt = (func_name)->
   out = false
 
-  if /^(module\.)?exports(\.|$)/.test func_name
+  exempt_regex = ///
+      ^(module\.)?exports(\.|$)    # module =   , module.exports =   , module.exports.blah.... =
+    | ^constructor$                # class constructors
+  ///
+
+  if exempt_regex.test func_name
     out = true
 
   return out
@@ -257,6 +262,12 @@ class ForkLinter
     # FIXME: handle do
 
     variable = node.variable
+
+    # super() has a null variable or something
+    if not variable
+      node.eachChild @visit
+      return
+
     switch getNodeType variable
       # if a call calls a call, it needs to be handled special
       when 'Call'
@@ -374,6 +385,24 @@ class ForkLinter
 ##    @current_branch.mergeChildCalls child_branch
 ##    @checkBranchForBadCalls @current_branch
 #    return
+  
+  visitClass: (node)=>
+    node.body.eachChild (child_node)=>
+      node_type = getNodeType child_node
+      switch node_type
+        when 'Value'
+          # if a body node of a Class is a Value, that means it's a method or variable applied directly to the class
+          child_node.base.eachChild (method_node)=>
+            method_body_node = method_node.value
+            @visit method_body_node
+            return
+        else
+          # otherwise, it behaves as normal code
+          child_node.eachChild @visit
+      return
+    return
+
+  # TODO: handle try/catch
 
   throwError: (node, err_msg, func_name, hits)=>
     if not node or not node.locationData
