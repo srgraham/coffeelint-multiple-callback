@@ -62,7 +62,7 @@ variableObjToStr = (variable_obj)->
 isExempt = (func_name)->
   out = false
 
-  if /^(module\.)?exports\./.test func_name
+  if /^(module\.)?exports(\.|$)/.test func_name
     out = true
 
   return out
