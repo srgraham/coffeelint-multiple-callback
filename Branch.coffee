@@ -24,6 +24,12 @@ class Branch
       out = false
     return out
 
+  isEndOfFuncExistence: (call_obj)->
+    if @is_end_of_branch and call_obj.is_defined_in_this_branch
+      return true
+
+    return false
+
   isRootBranch: ()->
     if _.isNull @parent_branch
       return true
@@ -127,7 +133,8 @@ class Branch
 
       return
 
-    child_branch.is_dead_branch = true
+    child_branch.is_end_of_branch = true
+#    child_branch.is_dead_branch = true
     return
 
   getCalls: ()=>

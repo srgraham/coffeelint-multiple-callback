@@ -1,4 +1,10 @@
 
+
+caller2 = (cb)-> # HIT
+  return
+
+caller2()
+
 caller = ()-> # HIT
   return
 
@@ -57,7 +63,7 @@ badFunc2 = (err, a_cb)-> # HIT
 
 badFunc()
 
-badFunc3 = (cb)->
+badFunc3 = (cb)-> # HIT
   return
 
 badFunc3()

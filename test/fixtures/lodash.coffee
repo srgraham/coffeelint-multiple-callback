@@ -4,13 +4,13 @@ stuff = {}
 
 _ = require 'lodash'
 
-badEach = (steps, callback)->
+badEach = (steps, callback)-> # HIT
   _.each steps, ()->
     callback
     return
   return
 
-goodEach = (data, callback)->
+goodEach = (data, bad_callback)-> # HIT
   steps = []
   _.each data, (val, key) ->
     steps.push (cb) ->
@@ -18,16 +18,13 @@ goodEach = (data, callback)->
         body: "some email"
 
       _.each val.assets, (asset) ->
-        eitms_code = asset.eitms_code
-        device_name = asset.device_name
-        from = asset.lender
-        to = asset.borrower
-        email_payload.body += "#{device_name} (#{eitms_code}): loaned to (#{to}) by (#{from}).\n"
+        thing = asset.thing
+        email_payload.body += "#{thing}\n"
         return
 
       stuff.emailNotification email_payload, (mail_err, mail_result) ->
         if mail_err
-          stuff.error 'Failed to send loan warning: ' + mail_err.message
+          stuff.error "Failed to send email: #{mail_err.message}"
           cb mail_err
           return
 
@@ -36,3 +33,5 @@ goodEach = (data, callback)->
       return
     return
   return
+
+goodEach()

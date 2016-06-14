@@ -1,9 +1,10 @@
 
 app = express()
+
 app.use '/test-multiple-res-error', (req,res,next)->
   options = {}
   res.send(123)
-  res.render 'path/to/template.ejs', options
+  res.render 'path/to/template.ejs', options # HIT
   return
 
 app.use '/test-multiple-res-okay', (req,res,next)->

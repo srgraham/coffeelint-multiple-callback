@@ -87,8 +87,9 @@ class ForkLinter
     @errors = []
     @current_branch = new Branch(null, true)
     @root_branch = @current_branch
-    @root_branch.is_dead_branch = true
     @visit root
+    @root_branch.is_end_of_branch = true
+    @root_branch.is_dead_branch = true
     @root_branch.is_new_scope = false
     @checkBranchForBadCalls @root_branch
 
@@ -106,16 +107,15 @@ class ForkLinter
       return
 
     if call_obj.might_not_be_func
-      # see if the name of the variable is callback-esque
+      # see if the name of the variable is callback-esque. if not, we'll skip over it
       if not getCallbackVarName call_obj.func_name
         return
-      return
 
     # check if this func might never be called :0!!
     if call_obj.min_hits is 0
 
       # only trigger if this is the end of a branch and the var was defined in this branch
-      if call_obj.is_defined_in_this_branch and branch.isDeadBranch()
+      if branch.isEndOfFuncExistence(call_obj) # branch.isDeadBranch()
         if not call_obj.triggered_errors.no_hits
           call_obj.triggered_errors.no_hits = true
           err_msg = "Callback '#{call_obj.func_name}' has the chance of never being called."
@@ -142,6 +142,7 @@ class ForkLinter
     cb()
 
     # @current_branch.is_dead_branch = not is_new_scope
+    @current_branch.is_end_of_branch = true
 
     @checkBranchForBadCalls @current_branch
 
@@ -234,6 +235,7 @@ class ForkLinter
   visitReturn: (node)=>
 #    console.log node
     @current_branch.is_dead_branch = true
+    @current_branch.is_end_of_branch = true
 #    @checkForBadCall @current_branch.calls
 #    @current_branch.calls = {}
 
