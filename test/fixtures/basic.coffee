@@ -78,6 +78,16 @@ goodIf = (err, cb)->
 
 goodIf()
 
+goodIf2 = (err, cb)->
+  if err
+    cb err
+    return
+  
+  cb null
+  return
+
+goodIf2()
+
 bad = (cb)->
   cb()
   cb() # HIT

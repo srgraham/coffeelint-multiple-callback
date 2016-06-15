@@ -63,7 +63,9 @@ isExempt = (func_name)->
   out = false
 
   exempt_regex = ///
-      ^(module\.)?exports(\.|$)    # module =   , module.exports =   , module.exports.blah.... =
+      ^(module\.)?exports(\.|$)    # module =
+                                   # module.exports =
+                                   # module.exports.blah.... =
     | ^constructor$                # class constructors
   ///
 
@@ -424,7 +426,7 @@ class ForkLinter
       try_block.eachChild @visit
       return
 
-    # FIXME: we might also need a branch to account for Try being hit, but not hitting an inner Return
+    # FIXME: we might also need a branch to account for Try being hit, but not hitting an inner Return?
 
     # AFTER processing all the branches, merge the calls back in
     catch_fork_branch = @mergeForkBranches catch_branch_hit, catch_branch_skipped

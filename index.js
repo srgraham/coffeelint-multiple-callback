@@ -12,8 +12,8 @@
     MultipleCallback.prototype.rule = {
       name: 'multiple_callback',
       level: 'error',
-      message: 'asdf',
-      description: '    '
+      message: 'Callback has the potential of being called multiple times',
+      description: 'CoffeeLint rule that finds instances where callbacks might be called more than once or not at all.\n\nThese functions have the potential of calling cb() multiple times, and is likely an error:\n\n  badFunc = (err, cb)->\n    cb err\n    cb err # BAD\n    return\n\n\n  badIf = (err, cb)->\n    if err\n      cb err\n\n    cb null # BAD\n    return\n\n\nThese functions are okay, since they only call the callback once no matter how the logic runs:\n\n  goodIf = (err, cb)->\n    if err\n      cb err\n    else\n      cb null\n    return\n\n\n  goodIf2 = (err, cb)->\n    if err\n      cb err\n      return\n\n    cb null\n    return\n'
     };
 
     MultipleCallback.prototype.lintAST = function(root_node, astApi) {

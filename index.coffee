@@ -6,15 +6,49 @@ module.exports = class MultipleCallback
   rule:
     name: 'multiple_callback'
     level: 'error'
-    message: 'asdf'
+    message: 'Callback has the potential of being called multiple times'
     description: '''
+      CoffeeLint rule that finds instances where callbacks might be called more than once or not at all.
+
+      These functions have the potential of calling cb() multiple times, and is likely an error:
+
+        badFunc = (err, cb)->
+          cb err
+          cb err # BAD
+          return
+
+
+        badIf = (err, cb)->
+          if err
+            cb err
+
+          cb null # BAD
+          return
+
+
+      These functions are okay, since they only call the callback once no matter how the logic runs:
+
+        goodIf = (err, cb)->
+          if err
+            cb err
+          else
+            cb null
+          return
+
+
+        goodIf2 = (err, cb)->
+          if err
+            cb err
+            return
+
+          cb null
+          return
+
     '''
 
   lintAST: (root_node, @astApi) ->
     fork_linter = new ForkLinter()
     fork_linter.lint root_node
-#    fork_linter.getRootSumScopeCalls()
-
 #    console.log 123, fork_linter.errors
 
     for err in fork_linter.errors
