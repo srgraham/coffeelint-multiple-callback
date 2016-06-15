@@ -1,6 +1,6 @@
 {
   "name": "coffeelint-multiple-callback",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Coffeelint rule that checks for callbacks being called multiple times",
   "main": "index.js",
   "scripts": {

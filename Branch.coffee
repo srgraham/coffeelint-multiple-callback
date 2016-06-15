@@ -4,10 +4,37 @@ _ = require 'lodash'
 
 class Branch
   constructor: (@parent_branch, @is_new_scope)->
-    @calls = _.cloneDeep @parent_branch?.calls or {}
+    @calls = {}
+    parent_calls =  @parent_branch?.calls or {}
 
+    _.each parent_calls, (parent_call_obj, prefixed_func_name)=>
 
-    _.each @calls, (call_obj)->
+      @initBlankFunc(parent_call_obj.func_name)
+
+      # inherited
+      @calls[prefixed_func_name].min_hits = parent_call_obj.min_hits
+      @calls[prefixed_func_name].max_hits = parent_call_obj.max_hits
+      @calls[prefixed_func_name].is_defined_in_this_scope = parent_call_obj.is_defined_in_this_scope
+      @calls[prefixed_func_name].might_not_be_func = parent_call_obj.might_not_be_func
+      @calls[prefixed_func_name].is_defined_in_this_file = parent_call_obj.is_defined_in_this_file
+
+      # inherited pass by ref!!!
+      @calls[prefixed_func_name].called_at_nodes = _.clone parent_call_obj.called_at_nodes # array is cloned. nodes are not. major speed boost
+      @calls[prefixed_func_name].triggered_errors = parent_call_obj.triggered_errors
+
+      # emptied values:
+      @calls[prefixed_func_name].min_hits_this_branch = 0
+      @calls[prefixed_func_name].max_hits_this_branch = 0
+      @calls[prefixed_func_name].called_at_nodes_this_branch = []
+      @calls[prefixed_func_name].is_defined_in_this_branch = false
+      @calls[prefixed_func_name].is_defined_in_this_scope = parent_call_obj.is_defined_in_this_scope
+
+      if @is_new_scope
+        @calls[prefixed_func_name].is_defined_in_this_scope = false
+
+      return
+
+    _.each @calls, (call_obj)=>
       call_obj.min_hits_this_branch = 0
       call_obj.max_hits_this_branch = 0
       call_obj.called_at_nodes_this_branch = []
@@ -18,27 +45,27 @@ class Branch
       return
     return
 
-  isDeadBranch: ()->
+  isDeadBranch: ()=>
     out = @is_dead_branch
     if @is_new_scope
       out = false
     return out
 
-  isEndOfFuncExistence: (call_obj)->
+  isEndOfFuncExistence: (call_obj)=>
     if @is_end_of_branch and call_obj.is_defined_in_this_branch
       return true
 
     return false
 
-  isRootBranch: ()->
+  isRootBranch: ()=>
     if _.isNull @parent_branch
       return true
     return false
 
-  getParentBranch: ()->
+  getParentBranch: ()=>
     return @parent_branch
 
-  initBlankFunc: (func_name)->
+  initBlankFunc: (func_name)=>
     if "#{prefix}-#{func_name}" is 'prefix-undefined' or "#{prefix}-#{func_name}" is 'prefix-null'
       throw new Error "undefined/null func_name passed to initBlankFunc()"
       return
