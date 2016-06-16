@@ -1,7 +1,7 @@
 
 some_require = require('./thing')()
 
-caller = ()-> # HIT
+caller = ()->
   return
 
 caller2 = (cb)-> # HIT
@@ -55,7 +55,7 @@ badFunc = (err, a_cb)->
   return
 
 
-badFunc2 = (err, a_cb)-> # HIT
+badFunc2 = (err, a_cb)->
   a_cb err
   a_cb err # HIT
   return
@@ -82,7 +82,7 @@ goodIf2 = (err, cb)->
   if err
     cb err
     return
-  
+
   cb null
   return
 
@@ -220,3 +220,7 @@ badTry = (bad_cb)->
   return
 
 badTry()
+
+goodFunc = (cb)->
+  someFunc cb, 123
+  return

@@ -97,7 +97,7 @@ class Branch
       is_modified_in_branch: false
     return
 
-  addFuncCall: (func_name, node)=>
+  addFuncCall: (func_name, node, is_direct_call = true)=>
 
     @initBlankFunc func_name
 
@@ -111,7 +111,9 @@ class Branch
     call_obj.called_at_nodes_this_branch.push node
 
     # if it's being called, we have no doubt that its a function
-    call_obj.might_not_be_func = false
+    if is_direct_call
+      call_obj.might_not_be_func = false
+
     call_obj.is_modified_in_branch = true
 
 #    console.log "Calling #{func_name}: [#{call_obj.min_hits}, #{call_obj.max_hits}]"
@@ -168,6 +170,7 @@ class Branch
 
       # out_calls[prefixed_func_name].is_defined_in_this_scope |= call_obj.is_defined_in_this_scope
       out_calls[prefixed_func_name].might_not_be_func &= call_obj.might_not_be_func
+      out_calls[prefixed_func_name].is_modified_in_branch = true
 
 
       return

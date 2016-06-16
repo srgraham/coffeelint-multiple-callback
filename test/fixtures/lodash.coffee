@@ -4,9 +4,9 @@ stuff = {}
 
 _ = require 'lodash'
 
-badEach = (steps, callback)-> # HIT
+badEach = (steps, callback)->
   _.each steps, ()->
-    callback
+    callback() # FIXME: this should get hit
     return
   return
 

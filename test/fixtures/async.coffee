@@ -5,7 +5,7 @@ stuff = {}
 async = require 'async'
 
 
-badAsync = (callback)-> # HIT
+badAsync = (callback)->
   steps = []
 
   steps.push ()->

@@ -11,7 +11,7 @@ getNodeType = (node)->
 # or null if we don't think its a callback variable
 getCallbackVarName = (var_name)->
   express_regex = ///
-    res\.          # var name matches res.[blah]
+    ^res\.          # var name matches res.[blah]
       (
         _end
         | end
@@ -19,8 +19,8 @@ getCallbackVarName = (var_name)->
         | redirect
         | render
         | send
-      )
-    | ^next$         # var name is "next"
+      )$
+    | ^next$        # var name is "next"
 
   ///i
 
@@ -29,10 +29,10 @@ getCallbackVarName = (var_name)->
     return 'express variable'
 
   regex = ///
-      (^(cb|cbb|callback|cb)\d*$)      # var name exact matches
-    | (^(cb|callback)_)                # var name that start with "cb_"
-    | (_(cb|callback)\d*$)             # var name that end with "_cb"
-    | (^express\svariable$)
+      (^(cb|callback|fn|func|cbb)\d*$)       # var name exact matches
+    | (^(cb|callback|fn|func|function)_)     # var name that starts with "cb_"
+    | (_(cb|callback|fn|func|function)\d*$)  # var name that ends with "_cb"
+    | (^(express)\svariable$)                # one of our special variables
   ///i
 
   # if it looks like a cb variable, return the var name
@@ -60,7 +60,6 @@ variableObjToStr = (variable_obj)->
   return var_name
 
 isExempt = (func_name)->
-  out = false
 
   exempt_regex = ///
       ^(module\.)?exports(\.|$)    # module =
@@ -70,19 +69,9 @@ isExempt = (func_name)->
   ///
 
   if exempt_regex.test func_name
-    out = true
+    return true
 
-  return out
-
-hasReturn = (node)->
-  has_return = false
-  node.eachChild (child_node)->
-    switch getNodeType child_node
-      when 'Return'
-        has_return = true
-        return false
-    return
-  return has_return
+  return false
 
 class ForkLinter
   constructor: ()->
@@ -111,7 +100,7 @@ class ForkLinter
     return
 
   checkForBadCall: (call_obj, branch)=>
-    
+
     if isExempt call_obj.func_name
       return
 
@@ -128,7 +117,7 @@ class ForkLinter
         if not call_obj.triggered_errors.no_hits
           call_obj.triggered_errors.no_hits = true
           err_msg = "Callback '#{call_obj.func_name}' has the chance of never being called."
-          @throwError call_obj.def_node, err_msg, call_obj.func_name, call_obj.min_hits
+          @throwError call_obj.def_node, err_msg, call_obj.func_name, call_obj.min_hits, call_obj
 
     # check if this func has been called multiple times :0!!
     if call_obj.max_hits > 1
@@ -140,7 +129,7 @@ class ForkLinter
           first_bad_node = call_obj.called_at_nodes[1]
 
           err_msg = "Callback '#{call_obj.func_name}' has the chance of being called multiple times (#{call_obj.max_hits})."
-          @throwError first_bad_node, err_msg, call_obj.func_name, call_obj.max_hits
+          @throwError first_bad_node, err_msg, call_obj.func_name, call_obj.max_hits, call_obj
     return
 
   addBranch: (is_new_scope, cb)=>
@@ -285,6 +274,21 @@ class ForkLinter
 
     @current_branch.addFuncCall converted_func_name, node
 
+    # also trigger a call on each param
+
+    if node.args
+      _.each node.args, (child_node)=>
+        child_node_type = getNodeType child_node
+        switch child_node_type
+          when 'Value'
+            # we only care about variables. don't care about strings, numbers, etc
+            if child_node.isAssignable()
+              called_func_name = variableObjToStr child_node
+              converted_called_func_name = getCallbackVarName(called_func_name) or called_func_name
+              @current_branch.addFuncCall converted_called_func_name, node, false
+          # end when Value
+        return
+
     node.eachChild @visit
 
     return
@@ -292,11 +296,12 @@ class ForkLinter
       #      when 'CodeFragment', 'Base', 'Block', 'Literal', 'Undefined', 'Null', 'Bool', 'Return', 'Value', 'Comment', 'Call', 'Extends', 'Access' ,'Index', 'Range', 'Slice', 'Obj', 'Arr', 'Class', 'Assign', 'Code', 'Param', 'Splat', 'Expansion', 'While', 'Op', 'In', 'Try', 'Throw' ,'Existence', 'Parens', 'For', 'Switch', 'If'
 
   visitAssign: (node)=>
-    node_type = getNodeType node.value
-    if node_type is 'Code'
-      func_name = variableObjToStr node.variable
-      if func_name
-        @visitDef node, func_name, false
+    # TODO: bring this back and check for whether or not a func is module.exported to flag it as used
+#    node_type = getNodeType node.value
+#    if node_type is 'Code'
+#      func_name = variableObjToStr node.variable
+#      if func_name
+#        @visitDef node, func_name, false
 
     node.eachChild @visit
     return
@@ -446,7 +451,7 @@ class ForkLinter
     @checkBranchForBadCalls @current_branch
     return
 
-  throwError: (node, err_msg, func_name, hits)=>
+  throwError: (node, err_msg, func_name, hits, call_obj)=>
     if not node or not node.locationData
       throw new Error "Missing node.locationData for throwError()"
       return
@@ -455,9 +460,16 @@ class ForkLinter
       lineNumber: node.locationData.first_line + 1
       func_name: func_name
       hits: hits
+      call_obj: call_obj
 
     if err_msg
       err_obj.message = err_msg
+
+    if not _.isEmpty call_obj.called_at_nodes
+      called_at_lines = _.map call_obj.called_at_nodes, (called_at_node)->
+        out = called_at_node.locationData.first_line + 1
+        return out
+      err_obj.message += " - Called at #{called_at_lines.join(', ')}"
 
     @errors.push err_obj
     return
