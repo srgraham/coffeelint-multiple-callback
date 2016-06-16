@@ -24,15 +24,23 @@ getCallbackVarName = (var_name)->
 
   ///i
 
-  # if it matches an express callback, return "express"
+  promise_regex = ///
+    ^(resolve|reject)$
+  ///
+
+  # if it matches an express callback, return "express variable"
   if express_regex.test var_name
     return 'express variable'
 
+  # if it matches an promise callback, return "promise variable"
+  if promise_regex.test var_name
+    return 'promise variable'
+
   regex = ///
-      (^(cb|callback|fn|func|cbb)\d*$)       # var name exact matches
-    | (^(cb|callback|fn|func|function)_)     # var name that starts with "cb_"
-    | (_(cb|callback|fn|func|function)\d*$)  # var name that ends with "_cb"
-    | (^(express)\svariable$)                # one of our special variables
+      (^(cb|callback|fn|cbb)\d*$)               # var name exact matches
+    | (^(cb|callback|fn)_)                      # var name that starts with "cb_"
+    | (_(cb|callback|fn)\d*$)                   # var name that ends with "_cb"
+    | (^(express|promise)\svariable$)           # one of our special variables
   ///i
 
   # if it looks like a cb variable, return the var name
@@ -257,6 +265,23 @@ class ForkLinter
 
     variable = node.variable
 
+    # trigger a call on each param
+    # This happens before the main Call handling because coffeescript doesn't have a node for a super() call
+    if node.args
+      _.each node.args, (child_node)=>
+        child_node_type = getNodeType child_node
+        switch child_node_type
+          when 'Value'
+            # we only care about variables. don't care about strings, numbers, etc
+            if child_node.isAssignable()
+              called_func_name = variableObjToStr child_node
+              converted_called_func_name = getCallbackVarName(called_func_name) or called_func_name
+              @current_branch.addFuncCall converted_called_func_name, node, false
+          # end when Value
+        return
+
+    # Now handle the Call node
+
     # super() has a null variable or something
     if not variable
       node.eachChild @visit
@@ -273,21 +298,6 @@ class ForkLinter
     converted_func_name = getCallbackVarName(func_name) or func_name
 
     @current_branch.addFuncCall converted_func_name, node
-
-    # also trigger a call on each param
-
-    if node.args
-      _.each node.args, (child_node)=>
-        child_node_type = getNodeType child_node
-        switch child_node_type
-          when 'Value'
-            # we only care about variables. don't care about strings, numbers, etc
-            if child_node.isAssignable()
-              called_func_name = variableObjToStr child_node
-              converted_called_func_name = getCallbackVarName(called_func_name) or called_func_name
-              @current_branch.addFuncCall converted_called_func_name, node, false
-          # end when Value
-        return
 
     node.eachChild @visit
 

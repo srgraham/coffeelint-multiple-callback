@@ -224,3 +224,11 @@ badTry()
 goodFunc = (cb)->
   someFunc cb, 123
   return
+
+class A
+
+class B extends A
+  thing: (callback)->
+#    superb callback
+    super callback
+    return
