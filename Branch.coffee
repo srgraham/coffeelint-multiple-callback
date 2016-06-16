@@ -27,7 +27,7 @@ class Branch
       @calls[prefixed_func_name].max_hits_this_branch = 0
       @calls[prefixed_func_name].called_at_nodes_this_branch = []
       @calls[prefixed_func_name].is_defined_in_this_branch = false
-      @calls[prefixed_func_name].is_defined_in_this_scope = parent_call_obj.is_defined_in_this_scope
+      @calls[prefixed_func_name].is_modified_in_branch = false
 
       if @is_new_scope
         @calls[prefixed_func_name].is_defined_in_this_scope = false
@@ -50,6 +50,15 @@ class Branch
     if @is_new_scope
       out = false
     return out
+
+  getBranchDepth: ()=>
+    branch_count = 0
+    next_branch_up = @
+    while branch_count < 99 and not _.isNull next_branch_up
+      next_branch_up = next_branch_up.getParentBranch()
+      branch_count += 1
+
+    return branch_count
 
   isEndOfFuncExistence: (call_obj)=>
     if @is_end_of_branch and call_obj.is_defined_in_this_branch
@@ -85,6 +94,7 @@ class Branch
         no_hits: false
         multiple_hits: false
       is_defined_in_this_file: false
+      is_modified_in_branch: false
     return
 
   addFuncCall: (func_name, node)=>
@@ -102,6 +112,7 @@ class Branch
 
     # if it's being called, we have no doubt that its a function
     call_obj.might_not_be_func = false
+    call_obj.is_modified_in_branch = true
 
 #    console.log "Calling #{func_name}: [#{call_obj.min_hits}, #{call_obj.max_hits}]"
     return
@@ -116,9 +127,11 @@ class Branch
     @calls["#{prefix}-#{func_name}"].def_node = node
     @calls["#{prefix}-#{func_name}"].might_not_be_func &= might_not_be_func
     @calls["#{prefix}-#{func_name}"].is_defined_in_this_file = true
+    @calls["#{prefix}-#{func_name}"].is_modified_in_branch = true
     return
 
   mergeChildCalls: (child_branch)=>
+
     # FIXME: child_branch.is_dead_branch????
 #    if child_branch.is_dead_branch
 #      console.log "Hit Return, skipping merge"
@@ -129,8 +142,8 @@ class Branch
 
     _.each child_calls, (call_obj, prefixed_func_name)=>
 
-      # skip over variables defined deeper in the chain
-      if call_obj.is_defined_in_this_branch
+      # skip over variables defined deeper in the chain or variables that havent been touched
+      if ( not call_obj.is_modified_in_branch ) or call_obj.is_defined_in_this_branch
         return
 
       @initBlankFunc call_obj.func_name
@@ -161,6 +174,7 @@ class Branch
 
     child_branch.is_end_of_branch = true
 #    child_branch.is_dead_branch = true
+
     return
 
   getCalls: ()=>

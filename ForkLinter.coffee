@@ -111,6 +111,7 @@ class ForkLinter
     return
 
   checkForBadCall: (call_obj, branch)=>
+    
     if isExempt call_obj.func_name
       return
 
@@ -231,13 +232,14 @@ class ForkLinter
     return combined_branch
 
   visit: (node)=>
-    handler = @["visit#{getNodeType(node)}"]
-#    console.log "Visiting #{getNodeType(node)}"
+    node_type = getNodeType(node)
+    handler = @["visit#{node_type}"]
+#    console.log "Visiting #{node_type}"
 
     if handler?
       handler node
     else
-#      console.log "No handler for #{getNodeType(node)}"
+#      console.log "No handler for #{node_type}"
       node.eachChild @visit
     return
     
@@ -371,6 +373,7 @@ class ForkLinter
       node.eachChild @visit
       return
 
+
     # IDK!:
 #    @checkBranchForBadCalls child_branch
     @current_branch.mergeChildCalls child_branch
@@ -387,6 +390,9 @@ class ForkLinter
 ##    @checkBranchForBadCalls child_branch
 ##    @current_branch.mergeChildCalls child_branch
 ##    @checkBranchForBadCalls @current_branch
+#    return
+
+#  visitLiteral: ()=>
 #    return
   
   visitClass: (node)=>
