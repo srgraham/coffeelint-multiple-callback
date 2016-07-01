@@ -99,4 +99,10 @@ describe 'lint the things', ->
     checkFixtureForHits('lodash')
     return
 
+  it 'ifcb', =>
+    getErrors('ifcb')
+#    console.log @rule.errors
+    checkFixtureForHits('ifcb')
+    return
+
   return

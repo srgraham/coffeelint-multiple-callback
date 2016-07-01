@@ -320,11 +320,43 @@ class ForkLinter
     block1 = node.body
     block2 = node.elseBody
 
+    condition = node.condition
+
+    # check for these:
+    # if callback
+    # if callback?
+    # if not callback
+    # if not callback?
+
+    invert_checking_existence_varname = false
+
+    while condition.first and condition.operator is '!'
+      invert_checking_existence_varname ^= true
+      condition = condition.first
+
+    if condition.expression
+      condition = condition.expression
+
+    checking_existence_varname = condition.base?.value
+    if checking_existence_varname
+      existence_func_name = variableObjToStr condition
+      existence_converted_func_name = getCallbackVarName(existence_func_name) or existence_func_name
+
     block1_branch = @addBranch false, ()=>
+      # if the if's condition is checking for the existence of a variable and it has a "not" operator,
+      # trigger this condition as a call, because missing a call in this branch is considered okay
+      if existence_converted_func_name and invert_checking_existence_varname
+        @current_branch.addFuncCall existence_converted_func_name, condition
+
       block1.eachChild @visit
       return
 
     block2_branch = @addBranch false, ()=>
+      # if the if's condition is checking for the existence of a variable and it doesn't have a "not" operator,
+      # trigger this condition as a call, because missing a call in this branch is considered okay
+      if existence_converted_func_name and not invert_checking_existence_varname
+        @current_branch.addFuncCall existence_converted_func_name, condition
+
       if block2
         block2.eachChild @visit
       return
