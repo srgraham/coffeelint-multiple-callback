@@ -346,7 +346,7 @@ class ForkLinter
       # if the if's condition is checking for the existence of a variable and it has a "not" operator,
       # trigger this condition as a call, because missing a call in this branch is considered okay
       if existence_converted_func_name and invert_checking_existence_varname
-        @current_branch.addFuncCall existence_converted_func_name, condition
+        @current_branch.addFuncCall existence_converted_func_name, condition, false
 
       block1.eachChild @visit
       return
@@ -355,7 +355,7 @@ class ForkLinter
       # if the if's condition is checking for the existence of a variable and it doesn't have a "not" operator,
       # trigger this condition as a call, because missing a call in this branch is considered okay
       if existence_converted_func_name and not invert_checking_existence_varname
-        @current_branch.addFuncCall existence_converted_func_name, condition
+        @current_branch.addFuncCall existence_converted_func_name, condition, false
 
       if block2
         block2.eachChild @visit

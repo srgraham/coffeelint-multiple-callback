@@ -58,3 +58,12 @@ ifCheck = (callback)->
 
   a = 9
   return
+
+errCheck = ()->
+  thing.stuff (err, cb)->
+    if err
+      console.log err
+
+    cb err
+    return
+  return
