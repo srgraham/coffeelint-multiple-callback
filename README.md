@@ -3,8 +3,10 @@ CoffeeLint rule that finds instances where callbacks might be called more than o
 
 This code is in the very early stages of development. If you find cases where it's broken, please add example test fixtures. For lines in tests that should trigger an error, add the comment ``# HIT`` to the end of the line. The tests go through line by line and verify that lines with that comment trigger a linting error and all other lines do not.
 ## Examples
-These functions have the potential of calling cb() multiple times, and is likely an error:
+These functions have the potential of calling cb() multiple times or zero times, and is likely an error:
 ```coffee
+# cb() is called twice
+
 badFunc = (err, cb)->
   cb err
   cb err # BAD
@@ -12,11 +14,22 @@ badFunc = (err, cb)->
 ```
 
 ```coffee
+# cb() could be called multiple times
+
 badIf = (err, cb)->
   if err
     cb err
 
   cb null # BAD
+  return
+```
+
+```coffee
+# cb() might never be called
+
+badIf = (err, cb)-> # BAD
+  if err
+    cb err
   return
 ```
 
@@ -36,6 +49,12 @@ goodIf2 = (err, cb)->
     return
 
   cb null
+  return
+```
+```coffee
+goodIf3 = (err, cb)->
+  if cb
+    cb()
   return
 ```
 

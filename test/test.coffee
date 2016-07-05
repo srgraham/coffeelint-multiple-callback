@@ -47,7 +47,7 @@ describe 'lint the things', ->
     @rule.errors.sort (a, b)->
       return a.lineNumber > b.lineNumber
 
-    regex_is_hit = /#\s*HIT\s*$/i
+    regex_is_hit = /#\s*(HIT|BAD)\s*$/i
     _.each fixture_source.split('\n'), (line_content, key)=>
       line_number = key + 1
       if regex_is_hit.test line_content
@@ -69,39 +69,38 @@ describe 'lint the things', ->
     return
 
 
+  it 'readme', =>
+    getErrors('readme')
+    checkFixtureForHits('readme')
+    return
+
   it 'basic', =>
     getErrors('basic')
-#    console.log @rule.errors
     checkFixtureForHits('basic')
     return
 
   it 'mocha', =>
     getErrors('mocha')
-#    console.log @rule.errors
     checkFixtureForHits('mocha')
     return
 
   it 'express', =>
     getErrors('express')
-#    console.log @rule.errors
     checkFixtureForHits('express')
     return
 
   it 'async', =>
     getErrors('async')
-#    console.log @rule.errors
     checkFixtureForHits('async')
     return
 
   it 'lodash', =>
     getErrors('lodash')
-#    console.log @rule.errors
     checkFixtureForHits('lodash')
     return
 
   it 'ifcb', =>
     getErrors('ifcb')
-#    console.log @rule.errors
     checkFixtureForHits('ifcb')
     return
 

@@ -13,7 +13,7 @@
       name: 'multiple_callback',
       level: 'error',
       message: 'Callback has the potential of being called multiple times',
-      description: 'CoffeeLint rule that finds instances where callbacks might be called more than once or not at all.\n\nThese functions have the potential of calling cb() multiple times, and is likely an error:\n\n  badFunc = (err, cb)->\n    cb err\n    cb err # BAD\n    return\n\n\n  badIf = (err, cb)->\n    if err\n      cb err\n\n    cb null # BAD\n    return\n\n\nThese functions are okay, since they only call the callback once no matter how the logic runs:\n\n  goodIf = (err, cb)->\n    if err\n      cb err\n    else\n      cb null\n    return\n\n\n  goodIf2 = (err, cb)->\n    if err\n      cb err\n      return\n\n    cb null\n    return\n'
+      description: 'CoffeeLint rule that finds instances where callbacks might be called more than once or not at all.\n\nThese functions have the potential of calling cb() multiple times, and is likely an error:\n\n  # cb() is called twice\n\n  badFunc = (err, cb)->\n    cb err\n    cb err # BAD\n    return\n\n\n  # cb() could be called multiple times\n\n  badIf = (err, cb)->\n    if err\n      cb err\n\n    cb null # BAD\n    return\n\n\n  # cb() might never be called\n\n  badIf2 = (err, cb)-> # BAD\n    if err\n      cb err\n    return\n\n\nThese functions are okay, since they only call the callback once no matter how the logic runs:\n\n  goodIf = (err, cb)->\n    if err\n      cb err\n    else\n      cb null\n    return\n\n\n  goodIf2 = (err, cb)->\n    if err\n      cb err\n      return\n\n    cb null\n    return\n\n\n  goodIf3 = (err, cb)->\n    if cb\n      cb()\n    return\n'
     };
 
     MultipleCallback.prototype.lintAST = function(root_node, astApi) {
